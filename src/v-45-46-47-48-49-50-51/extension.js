@@ -13,12 +13,16 @@ export default class CustomizeClockOnLockScreenExtension extends Extension {
         this._settings = this.getSettings();
         this._dialog = Main.screenShield._dialog;
         this._originalClock = this._dialog._clock;
+        this._stack = this._dialog._stack;
+        this._originalStackClock = this._stack._clock;
 
         if (this._dialog) {
-            this._dialog._stack.remove_child(this._dialog._clock);
+            this._stack.remove_child(this._dialog._clock);
             this._dialog._clock = new ModifiedClock(this._settings, width);
             this._dialog._clock.set_pivot_point(0.5, 0.5);
-            this._dialog._stack.add_child(this._dialog._clock);
+            this._stack.add_child(this._dialog._clock);
+            if ('_clock' in this._stack)
+                this._stack._clock = this._dialog._clock;
 
             this._dialog._promptBox.set_y_align(Clutter.ActorAlign.CENTER);
         }
@@ -27,14 +31,18 @@ export default class CustomizeClockOnLockScreenExtension extends Extension {
     disable() {
         // unlock-dialog is used in session-modes because this extension purpose is
         // to tweak the clock on lock screen itself.
-        this._dialog._stack.remove_child(this._dialog._clock);
-        this._dialog._stack.add_child(this._originalClock);
+        this._stack.remove_child(this._dialog._clock);
+        this._stack.add_child(this._originalClock);
+        if ('_clock' in this._stack)
+            this._stack._clock = this._originalStackClock;
 
         this._dialog._promptBox.set_y_align(Clutter.ActorAlign.DEFAULT);
 
         this._dialog._clock.destroy();
         this._dialog._clock = null;
         this._dialog = null;
+        this._stack = null;
+        this._originalStackClock = null;
 
         this._settings = null;
     }
